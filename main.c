@@ -63,41 +63,20 @@ void send_byte(char ch)
 	USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
 }
 
-void read_romfs_task(void *pvParameters)
-{
-	char buf[128];
-	size_t count;
-	int fd = fs_open("/romfs/test.txt", 0, O_RDONLY);
-	do {
-		//Read from /romfs/test.txt to buffer
-		count = fio_read(fd, buf, sizeof(buf));
-		
-		//Write buffer to fd 1 (stdout, through uart)
-		fio_write(1, buf, count);
-	} while (count);
-	
-	while (1);
-}
-
 int main()
 {
 	init_rs232();
 	enable_rs232_interrupts();
 	enable_rs232();
-	
+
 	fs_init();
 	fio_init();
-	
+
 	register_romfs("romfs", &_sromfs);
-	
+
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
 	vSemaphoreCreateBinary(serial_tx_wait_sem);
-
-	/* Create a task to output text read from romfs. */
-	xTaskCreate(read_romfs_task,
-	            (signed portCHAR *) "Read romfs",
-	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
