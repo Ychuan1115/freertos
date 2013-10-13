@@ -17,6 +17,7 @@ extern const char _sromfs;
 static void setup_hardware();
 
 volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
+volatile xQueueHandle serial_rx_queue = NULL;
 
 
 /* IRQ handler to handle USART2 interruptss (both transmit and receive
@@ -24,6 +25,7 @@ volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
 void USART2_IRQHandler()
 {
 	static signed portBASE_TYPE xHigherPriorityTaskWoken;
+	char rx_msg;
 
 	/* If this interrupt is for a transmit... */
 	if (USART_GetITStatus(USART2, USART_IT_TXE) != RESET) {
@@ -35,6 +37,17 @@ void USART2_IRQHandler()
 		/* Diables the transmit interrupt. */
 		USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
 		/* If this interrupt is for a receive... */
+	}
+	else if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) {
+		/* Receive the byte from the buffer. */
+		rx_msg = USART_ReceiveData(USART2);
+
+		/* Queue the received byte. */
+		if(!xQueueSendToBackFromISR(serial_rx_queue, &rx_msg, &xHigherPriorityTaskWoken)) {
+			/* If there was an error queueing the received byte,
+			 * freeze. */
+			while(1);
+		}
 	}
 	else {
 		/* Only transmit and receive interrupts should be enabled.
@@ -63,6 +76,16 @@ void send_byte(char ch)
 	USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
 }
 
+char receive_byte()
+{
+	char msg;
+
+	/* Wait for a byte to be queued by the receive interrupts handler. */
+	while (!xQueueReceive(serial_rx_queue, &msg, portMAX_DELAY));
+
+	return msg;
+}
+
 int main()
 {
 	init_rs232();
@@ -77,6 +100,7 @@ int main()
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
 	vSemaphoreCreateBinary(serial_tx_wait_sem);
+	serial_rx_queue = xQueueCreate(1, sizeof(char));
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
