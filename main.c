@@ -12,6 +12,8 @@
 #include "filesystem.h"
 #include "fio.h"
 
+#define MAX_SERIAL_STR 100
+
 extern const char _sromfs;
 
 static void setup_hardware();
@@ -36,8 +38,9 @@ void USART2_IRQHandler()
 
 		/* Diables the transmit interrupt. */
 		USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
-		/* If this interrupt is for a receive... */
+
 	}
+	/* If this interrupt is for a receive... */
 	else if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) {
 		/* Receive the byte from the buffer. */
 		rx_msg = USART_ReceiveData(USART2);
@@ -86,6 +89,77 @@ char receive_byte()
 	return msg;
 }
 
+void Shell()
+{
+	char str[MAX_SERIAL_STR];
+	char ch;
+
+	int curr_char;
+	int done;
+	char pos[] = "\rrtenv:~$ ";
+	char newLine[] = "\n\r";
+
+	while (1)
+    {
+        fio_write(1, pos, strlen(pos)+1);
+		curr_char = 0;
+		done = 0;
+		str[curr_char] = '\0';
+		do
+        {
+			/* Receive a byte from the RS232 port (this call will
+			 * block). */
+            ch=receive_byte();
+
+			/* If the byte is an end-of-line type character, then
+			 * finish the string and inidcate we are done.
+			 */
+			if (curr_char >= MAX_SERIAL_STR-1 || (ch == '\r') || (ch == '\n'))
+            {
+				str[curr_char] = '\0';
+				done = -1;
+				/* Otherwise, add the character to the
+				 * response string. */
+			}
+			else if(ch == 127)//press the backspace key
+            {
+                if(curr_char!=0)
+                {
+                    curr_char--;
+                    fio_write(1,"\b \b", 3);
+                }
+            }
+            else if(ch == 27)//press up, down, left, right, home, page up, delete, end, page down
+            {
+                ch=receive_byte();
+                if(ch != '[')
+                {
+                    str[curr_char++] = ch;
+                    fio_write(1, &ch, 1);
+                }
+                else
+                {
+                    ch=receive_byte();
+                    if(ch >= '1' && ch <= '6')
+                    {
+                        ch=receive_byte();
+                    }
+                }
+            }
+			else
+            {
+				str[curr_char++] = ch;
+				fio_write(1, &ch, 1);
+			}
+		} while (!done);
+        fio_write(1, newLine, strlen(newLine)+1);
+        /*if(curr_char>0)
+        {
+            HandleInput(str);
+        }*/
+	}
+}
+
 int main()
 {
 	init_rs232();
@@ -101,6 +175,13 @@ int main()
 	 * the RS232. */
 	vSemaphoreCreateBinary(serial_tx_wait_sem);
 	serial_rx_queue = xQueueCreate(1, sizeof(char));
+
+	/* Create a task to receive characters from the RS232 port and echo
+	 * them back to the RS232 port. */
+	xTaskCreate(Shell,
+	            (signed portCHAR *) "Shell",
+	            512 /* stack size */, NULL,
+	            tskIDLE_PRIORITY + 10, NULL);
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
