@@ -96,12 +96,12 @@ void Shell()
 
 	int curr_char;
 	int done;
-	char pos[] = "\rrtenv:~$ ";
+	char pos[] = "\rfreertos:~$ ";
 	char newLine[] = "\n\r";
 
 	while (1)
     {
-        fio_write(1, pos, strlen(pos)+1);
+        fio_write(1, pos, strlen(pos));
 		curr_char = 0;
 		done = 0;
 		str[curr_char] = '\0';
@@ -152,11 +152,7 @@ void Shell()
 				fio_write(1, &ch, 1);
 			}
 		} while (!done);
-        fio_write(1, newLine, strlen(newLine)+1);
-        /*if(curr_char>0)
-        {
-            HandleInput(str);
-        }*/
+        fio_write(1, newLine, strlen(newLine));
 	}
 }
 

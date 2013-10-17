@@ -74,3 +74,19 @@ size_t strlen ( const char * str )
     for(count=0 ; str[count]!='\0';count++);
     return count;
 }
+
+int strcmp ( const char * str1, const char * str2 )
+{
+    int i=0;
+    while(str1[i]!='\0' && str2[i]!='\0')
+    {
+        if(str1[i]!=str2[i])
+        {
+            return (str1[i]>str2[i])?1:-1;
+        }
+        i++;
+    }
+
+    return 0;
+}
+
