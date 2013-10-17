@@ -90,3 +90,16 @@ int strcmp ( const char * str1, const char * str2 )
     return 0;
 }
 
+char * strcat ( char * destination, const char * source )
+{
+    int dLength = strlen(destination);
+    int sLength = strlen(source);
+    int i;
+    for (i = 0; i<sLength; i++)
+    {
+        destination[i+dLength]=source[i];
+    }
+    destination[dLength+sLength]='\0';
+    return destination;
+}
+
