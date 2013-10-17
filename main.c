@@ -91,6 +91,13 @@ char receive_byte()
 	return msg;
 }
 
+void ps(char splitInput[][20], int splitNum)
+{
+    char str[100];
+    vTaskList(str);
+    fio_write(1,str,strlen(str));
+}
+
 
 void echo(char splitInput[][20], int splitNum)
 {
@@ -158,6 +165,7 @@ void HandleInput(char* input)
             echo(splitStr,splitNum);
             break;
         case PS:
+            ps(splitStr,splitNum);
             break;
         case HELLO:
             hello(splitStr,splitNum);
