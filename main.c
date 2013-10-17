@@ -93,7 +93,10 @@ char receive_byte()
 
 void ps(char splitInput[][20], int splitNum)
 {
-    char str[100];
+    char infoDescription[]="Name\t\t\b\bState\t\b\b\bPriority\t\bStack\t\bNum";
+    fio_write(1,infoDescription,strlen(infoDescription));
+    const int taskInfoNum=40;
+    char str[taskInfoNum*5];
     vTaskList(str);
     fio_write(1,str,strlen(str));
 }

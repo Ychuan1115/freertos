@@ -215,6 +215,9 @@ int sprintf ( char * str, const char * format, ... )//only support %s (string), 
                 case 'd':
                     strcat(str,itoa(va_arg(para,int),integer));
                     break;
+                case 'u':
+                    strcat(str,itoa(va_arg(para,unsigned),integer));
+                    break;
                 default:
                     break;
             }
