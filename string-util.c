@@ -90,7 +90,7 @@ int strcmp ( const char * str1, const char * str2 )
     return 0;
 }
 
-char * strcat ( char * destination, const char * source )
+char * strcat ( char * destination, const char * source )//suppose the destination has enough space for concatenating the source
 {
     int dLength = strlen(destination);
     int sLength = strlen(source);
@@ -103,3 +103,27 @@ char * strcat ( char * destination, const char * source )
     return destination;
 }
 
+char* itoa(int value, char* str)//only support base=10
+{
+    int base = 10;
+    int divideNum = base;
+    int i=0;
+    while(value/divideNum > 0)
+    {
+        divideNum*=base;
+    }
+    if(value < 0)
+    {
+        str[0] = '-';
+        i++;
+    }
+    while(divideNum/base > 0)
+    {
+        divideNum/=base;
+        str[i++]=value/divideNum+48;
+        value%=divideNum;
+    }
+    str[i]='\0';
+    return str;
+
+}

@@ -6,6 +6,7 @@
 #include "filesystem.h"
 #include "osdebug.h"
 #include "hash-djb2.h"
+#include <stdarg.h>
 
 static struct fddef_t fio_fds[MAX_FDS];
 
@@ -16,10 +17,10 @@ static ssize_t stdin_read(void * opaque, void * buf, size_t count) {
 static ssize_t stdout_write(void * opaque, const void * buf, size_t count) {
     int i;
     const char * data = (const char *) buf;
-    
+
     for (i = 0; i < count; i++)
         send_byte(data[i]);
-    
+
     return count;
 }
 
@@ -52,12 +53,12 @@ static int fio_is_open_int(int fd) {
 
 static int fio_findfd() {
     int i;
-    
+
     for (i = 0; i < MAX_FDS; i++) {
         if (!fio_is_open_int(i))
             return i;
     }
-    
+
     return -1;
 }
 
@@ -74,7 +75,7 @@ int fio_open(fdread_t fdread, fdwrite_t fdwrite, fdseek_t fdseek, fdclose_t fdcl
 //    DBGOUT("fio_open(%p, %p, %p, %p, %p)\r\n", fdread, fdwrite, fdseek, fdclose, opaque);
     xSemaphoreTake(fio_sem, portMAX_DELAY);
     fd = fio_findfd();
-    
+
     if (fd >= 0) {
         fio_fds[fd].fdread = fdread;
         fio_fds[fd].fdwrite = fdwrite;
@@ -83,7 +84,7 @@ int fio_open(fdread_t fdread, fdwrite_t fdwrite, fdseek_t fdseek, fdclose_t fdcl
         fio_fds[fd].opaque = opaque;
     }
     xSemaphoreGive(fio_sem);
-    
+
     return fd;
 }
 
@@ -182,4 +183,44 @@ static int devfs_open(void * opaque, const char * path, int flags, int mode) {
 void register_devfs() {
     DBGOUT("Registering devfs.\r\n");
     register_fs("dev", devfs_open, NULL);
+}
+
+int sprintf ( char * str, const char * format, ... )//only support %s (string), %c (charater) and %i(%d) (integer)
+{
+    va_list para;
+    va_start(para,format);
+    int curr_pos=0;
+    char ch[]={'0','\0'};
+    char integer[11];
+    str[0]='\0';
+    while(format[curr_pos]!='\0')
+    {
+        if(format[curr_pos]!='%')
+        {
+            ch[0]=format[curr_pos];
+            strcat(str,ch);
+        }
+        else
+        {
+            switch(format[++curr_pos])
+            {
+                case 's':
+                    strcat(str,va_arg(para,char*));
+                    break;
+                case 'c':
+                    ch[0]=(char)va_arg(para,int);
+                    strcat(str,ch);
+                    break;
+                case 'i':
+                case 'd':
+                    strcat(str,itoa(va_arg(para,int),integer));
+                    break;
+                default:
+                    break;
+            }
+        }
+        curr_pos++;
+    }
+    va_end(para);
+    return strlen(str);
 }
