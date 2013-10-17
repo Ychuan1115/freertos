@@ -1,6 +1,7 @@
 #define USE_STDPERIPH_DRIVER
 #include "stm32f10x.h"
 
+
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -11,6 +12,7 @@
 /* Filesystem includes */
 #include "filesystem.h"
 #include "fio.h"
+#include "command.h"
 
 #define MAX_SERIAL_STR 100
 
@@ -89,6 +91,84 @@ char receive_byte()
 	return msg;
 }
 
+
+void echo(char splitInput[][20], int splitNum)
+{
+    int i=1;
+    while(splitInput[i][0] == '-' && i < splitNum)i++;
+    for(; i < splitNum; i++)
+    {
+        fio_write(1, splitInput[i], strlen(splitInput[i]));
+        fio_write(1, " ", 1);
+    }
+    fio_write(1, "\n", 1);
+}
+
+void hello(char splitInput[][20], int splitNum)
+{
+    char *str = "Hello, World!\n";
+    fio_write(1, str, strlen(str));
+}
+
+int CommandNO(char* cmd)
+{
+    int i;
+    for(i = 0; i < CMDNUM; i++)
+    {
+        if(strcmp(cmd,cmdTable[i])==0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+//Handle input string
+void HandleInput(char* input)
+{
+    int i, j;
+    char splitStr[50][20];/*splitStr[0]:command
+                            splitStr[1]~splitStr[k]:options
+                            splitStr[k+1]~splitStr[n]:arguments
+                          */
+    int splitNum = 0;
+    int cmdNO;
+    for(i=0, j=0; input[i]!='\0' && j < 20; i++)
+    {
+        if(input[i] == ' ')
+        {
+            if(j != 0)
+            {
+                splitStr[splitNum++][j] = '\0';
+                j = 0;
+            }
+            continue;
+        }
+        splitStr[splitNum][j] = input[i];
+        j++;
+    }
+    splitStr[splitNum++][j] = '\0';
+
+    cmdNO=CommandNO(splitStr[0]);
+    switch(cmdNO)
+    {
+        case HELP:
+            break;
+        case ECHO:
+            echo(splitStr,splitNum);
+            break;
+        case PS:
+            break;
+        case HELLO:
+            hello(splitStr,splitNum);
+            break;
+        default:
+            fio_write(1, splitStr[0], strlen(splitStr[0]));
+            fio_write(1, ": command not found\n", 20);
+            break;
+    }
+}
+
 void Shell()
 {
 	char str[MAX_SERIAL_STR];
@@ -153,6 +233,10 @@ void Shell()
 			}
 		} while (!done);
         fio_write(1, newLine, strlen(newLine));
+        if(curr_char>0)
+        {
+            HandleInput(str);
+        }
 	}
 }
 
