@@ -124,7 +124,8 @@ void ls(char splitInput[][20], int splitNum)
 {
     char buff[128];
     int fileNum;
-    fileNum=getAllFileName("/fomfs/",buff);
+    buff[0]='\0';
+    fileNum=getAllFileName("/romfs/",buff);
     fio_write(1,buff,strlen(buff));
     fio_write(1,"\r\n",2);
 }
