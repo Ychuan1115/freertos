@@ -23,7 +23,7 @@ static ssize_t romfs_read(void * opaque, void * buf, size_t count) {
     struct romfs_fds_t * f = (struct romfs_fds_t *) opaque;
     const uint8_t * size_p = f->file - 4;
     uint32_t size = get_unaligned(size_p);
-    
+
     if ((f->cursor + count) > size)
         count = size - f->cursor;
 
@@ -38,7 +38,7 @@ static off_t romfs_seek(void * opaque, off_t offset, int whence) {
     const uint8_t * size_p = f->file - 4;
     uint32_t size = get_unaligned(size_p);
     uint32_t origin;
-    
+
     switch (whence) {
     case SEEK_SET:
         origin = 0;
@@ -68,12 +68,17 @@ static off_t romfs_seek(void * opaque, off_t offset, int whence) {
 const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len) {
     const uint8_t * meta;
 
-    for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 4); meta += get_unaligned(meta + 4) + 8) {
+    /*
+        file information: |hash|size of name|name of file|size of data|data|
+        get_unaligned(meta + 4): the size used to store name, get_unaligned(meta + 8 + get_unaligned(meta + 4)): the size used to store data,
+        12: hash code + information of length used to store the name + information of size used to store the data
+    */
+    for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 4); meta += get_unaligned(meta + 4) + get_unaligned(meta + 8 + get_unaligned(meta + 4)) + 12) {
         if (get_unaligned(meta) == h) {
             if (len) {
-                *len = get_unaligned(meta + 4);
+                *len = get_unaligned(meta + 8 + get_unaligned(meta + 4));
             }
-            return meta + 8;
+            return meta + 12 + get_unaligned(meta + 4);
         }
     }
 
