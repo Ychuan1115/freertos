@@ -120,6 +120,15 @@ void hello(char splitInput[][20], int splitNum)
     fio_write(1, str, strlen(str));
 }
 
+void ls(char splitInput[][20], int splitNum)
+{
+    char buff[128];
+    int fileNum;
+    fileNum=getAllFileName("/fomfs/",buff);
+    fio_write(1,buff,strlen(buff));
+    fio_write(1,"\r\n",2);
+}
+
 int CommandNO(char* cmd)
 {
     int i;
@@ -172,6 +181,9 @@ void HandleInput(char* input)
             break;
         case HELLO:
             hello(splitStr,splitNum);
+            break;
+        case LS:
+            ls(splitStr,splitNum);
             break;
         default:
             fio_write(1, splitStr[0], strlen(splitStr[0]));
