@@ -87,6 +87,9 @@ const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32
 
 const uint8_t * getNextFileName(const uint8_t * romfs, char * buff)
 {
+    if(!(get_unaligned(romfs) && get_unaligned(romfs + 4)))
+        return NULL;
+
     uint32_t i;
     uint32_t fileNameLength = get_unaligned(romfs+4);
     romfs+=8;
