@@ -1,9 +1,5 @@
 
-#define HELP 0
-#define ECHO 1
-#define PS 2
-#define HELLO 3
-#define CMDNUM 4
+#define CMDNUM 5
 
-
-static char cmdTable[CMDNUM][20]={"help","echo","ps","hello"};
+enum Cmd{HELP=0,ECHO,PS,HELLO,LS};
+static char cmdTable[CMDNUM][20]={"help","echo","ps","hello", "ls"};
