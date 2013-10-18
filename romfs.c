@@ -95,7 +95,7 @@ const uint8_t * getNextFileName(const uint8_t * romfs, char * buff)
     romfs+=8;
     while(fileNameLength--)
     {
-        sprintf(buff,"%c",*romfs++);
+        strcat(buff,romfs);
     }
     sprintf(buff,"\0");
     return romfs+get_unaligned(romfs+4)+4;
