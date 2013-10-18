@@ -101,7 +101,8 @@ const uint8_t * getNextFileName(const uint8_t * romfs, char * buff)
         ch[0]=*romfs++;
         strcat(buff,ch);
     }
-    return romfs+get_unaligned(romfs+4)+4;
+    strcat(buff,"\t");
+    return romfs+get_unaligned(romfs)+4;
 }
 
 static int romfs_open(void * opaque, const char * path, int flags, int mode) {
