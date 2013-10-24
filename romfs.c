@@ -97,7 +97,10 @@ const uint8_t * getNextFileName(const uint8_t * romfs, char * buff)
     while(fileNameLength--)
     {
         if(*romfs==0)
+        {
+            romfs+=fileNameLength+1;
             break;
+        }
         ch[0]=*romfs++;
         strcat(buff,ch);
     }
