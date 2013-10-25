@@ -97,11 +97,27 @@ static unsigned int lfsr = 0xACE1;
 // Get a pseudorandom number generator from Wikipedia
 static int prng(void)
 {
-    static unsigned int bit;
-    /* taps: 16 14 13 11; characteristic polynomial: x^16 + x^14 + x^13 + x^11 + 1 */
+    /*static unsigned int bit;
+    // taps: 16 14 13 11; characteristic polynomial: x^16 + x^14 + x^13 + x^11 + 1
     bit  = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5) ) & 1;
-    lfsr =  (lfsr >> 1) | (bit << 15);
+    lfsr =  (lfsr >> 1) | (bit << 15);*/
+
+
+    __asm__ (
+             "mov r0, %1             \n" // r0=lfsr
+             "eor r1, r0, r0, lsr #2 \n" // r1 = (lfsr >> 0) ^ (lfsr >> 2)
+             "eor r1, r1, r0, lsr #3 \n" // r1 = r1 ^ (lfsr >> 3)
+             "eor r1, r1, r0, lsr #5 \n" // r1 = r1 ^ (lfsr >> 5)
+             "and r1, #1             \n" // r1 = r1 & 1
+             "lsl r1, #15            \n" // r1 = r1 << 15
+             "orr r1, r1, r0, lsr #1 \n" // r1 = (lfsr >> 1) | (bit << 15);
+             "mov %0, r1             \n" // lfsr = r1
+             :"=r"(lfsr)
+             :"r"(lfsr)
+             :"r0","r1"
+    );
     return lfsr & 0xffff;
+
 }
 
 void mmtest(char splitInput[][20], int splitNum)
