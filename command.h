@@ -13,6 +13,7 @@ void echo(char splitInput[][20], int splitNum);
 void cat(char splitInput[][20], int splitNum);
 void hello(char splitInput[][20], int splitNum);
 void ls(char splitInput[][20], int splitNum);
+void mmtest(char splitInput[][20], int splitNum);
 
 static cmd_type cmd[]={
     {
@@ -34,6 +35,10 @@ static cmd_type cmd[]={
     {
         .name="ls",
         .handler=ls
+    },
+    {
+        .name="mmtest",
+        .handler=mmtest
     }
 };
 
